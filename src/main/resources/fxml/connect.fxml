@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?language JavaScript?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.effect.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.paint.*?>
+<?import javafx.scene.text.*?>
+
+<VBox fx:id="vBoxConnect" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="128.0" prefWidth="256.0" spacing="8.0" style="-fx-background-color: rgb(255, 255, 255, 255); -fx-background-radius: 10;" BorderPane.alignment="CENTER" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.kpfu.itis.bagaviev.agario.client.fx.controllers.ConnectController">
+      <Label alignment="CENTER" text="Connect" textAlignment="CENTER">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+      </Label>
+      <TextField fx:id="textFieldNickname" promptText="Nickname">
+         <font>
+            <Font size="14.0" />
+         </font></TextField>
+   <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="12.0">
+      <children>
+            <Button fx:id="buttonPlay" alignment="CENTER" mnemonicParsing="false" style="-fx-background-color: rgb(229,43,80, 255); -fx-text-fill: rgb(255, 255, 255, 255);" text="Play" textAlignment="CENTER">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+               <padding>
+                  <Insets bottom="4.0" left="16.0" right="16.0" top="4.0" />
+               </padding>
+            </Button>
+         <Button fx:id="buttonSkins" alignment="CENTER" mnemonicParsing="false" style="-fx-background-color: rgb(255,176,46, 255); -fx-text-fill: rgb(255, 255, 255, 255);" text="Skins" textAlignment="CENTER">
+            <font>
+               <Font name="System Bold" size="14.0" />
+            </font>
+            <padding>
+               <Insets bottom="4.0" left="16.0" right="16.0" top="4.0" />
+            </padding>
+         </Button>
+      </children>
+   </HBox>
+   <padding>
+      <Insets bottom="12.0" left="8.0" right="8.0" top="12.0" />
+   </padding>
+   <effect>
+      <DropShadow height="106.0" radius="51.035" width="100.14">
+         <color>
+            <Color opacity="0.380952388048172" />
+         </color>
+      </DropShadow>
+   </effect>
+</VBox>

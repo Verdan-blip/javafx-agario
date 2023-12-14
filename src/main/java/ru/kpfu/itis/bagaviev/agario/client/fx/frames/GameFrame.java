@@ -3,7 +3,6 @@ package ru.kpfu.itis.bagaviev.agario.client.fx.frames;
 import javafx.scene.Parent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
-import javafx.scene.input.ZoomEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import ru.kpfu.itis.bagaviev.agario.client.fx.camera.AgarFollowingCamera;

@@ -15,9 +15,9 @@ public class ConnectFrame extends Frame<ConnectController> {
         super(Paths.get("src/main/resources/fxml/connect.fxml"));
         Button buttonPlay = controller.getButtonPlay();
         TextField textFieldNickname = controller.getTextFieldNickname();
-        buttonPlay.setOnAction((event) -> {
-            client.sendMessage(new RegisterMeMessage(textFieldNickname.getText()));
-        });
+        buttonPlay.setOnAction(event ->
+            client.sendMessage(new RegisterMeMessage(textFieldNickname.getText()))
+        );
     }
 
     @Override

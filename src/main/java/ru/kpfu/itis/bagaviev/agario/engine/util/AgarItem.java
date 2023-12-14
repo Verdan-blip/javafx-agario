@@ -3,9 +3,9 @@ package ru.kpfu.itis.bagaviev.agario.engine.util;
 import ru.kpfu.itis.bagaviev.agario.engine.objects.Agar;
 
 public class AgarItem {
-    private Integer id;
-    private String nickname;
-    private Agar agar;
+    private final Integer id;
+    private final String nickname;
+    private final Agar agar;
 
     public AgarItem(Integer id, String nickname, Agar agar) {
         this.id = id;

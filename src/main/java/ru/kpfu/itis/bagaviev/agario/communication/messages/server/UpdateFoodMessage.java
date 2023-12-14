@@ -1,6 +1,5 @@
 package ru.kpfu.itis.bagaviev.agario.communication.messages.server;
 
-import javafx.scene.paint.Color;
 import ru.kpfu.itis.bagaviev.agario.communication.messages.abstracts.Message;
 import ru.kpfu.itis.bagaviev.agario.communication.messages.abstracts.MessageTypes;
 import ru.kpfu.itis.bagaviev.agario.engine.objects.Food;

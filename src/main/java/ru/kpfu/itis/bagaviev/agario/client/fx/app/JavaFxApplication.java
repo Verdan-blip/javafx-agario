@@ -2,15 +2,11 @@ package ru.kpfu.itis.bagaviev.agario.client.fx.app;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
-import javafx.scene.paint.ImagePattern;
 import javafx.stage.Stage;
 import ru.kpfu.itis.bagaviev.agario.client.fx.frames.GameFrame;
 import ru.kpfu.itis.bagaviev.agario.client.fx.listeners.ServerMessageListener;
 import ru.kpfu.itis.bagaviev.agario.client.net.Client;
 import ru.kpfu.itis.bagaviev.agario.server.net.Server;
-
-import java.nio.file.Paths;
 
 
 public class JavaFxApplication extends Application {

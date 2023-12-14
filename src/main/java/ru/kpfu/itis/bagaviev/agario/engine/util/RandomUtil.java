@@ -1,4 +1,4 @@
-package ru.kpfu.itis.bagaviev.agario.engine.math;
+package ru.kpfu.itis.bagaviev.agario.engine.util;
 
 import java.util.Random;
 

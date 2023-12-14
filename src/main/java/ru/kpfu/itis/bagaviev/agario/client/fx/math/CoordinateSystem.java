@@ -26,12 +26,4 @@ public class CoordinateSystem {
         return -fxY + screenHeight / 2;
     }
 
-    public float getScreenWidth() {
-        return screenWidth;
-    }
-
-    public float getScreenHeight() {
-        return screenHeight;
-    }
-
 }

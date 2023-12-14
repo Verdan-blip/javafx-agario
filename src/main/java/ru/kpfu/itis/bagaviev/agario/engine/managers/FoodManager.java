@@ -1,7 +1,7 @@
 package ru.kpfu.itis.bagaviev.agario.engine.managers;
 
 import javafx.scene.paint.Color;
-import ru.kpfu.itis.bagaviev.agario.engine.math.RandomUtil;
+import ru.kpfu.itis.bagaviev.agario.engine.util.RandomUtil;
 import ru.kpfu.itis.bagaviev.agario.engine.objects.Food;
 
 import java.util.Random;

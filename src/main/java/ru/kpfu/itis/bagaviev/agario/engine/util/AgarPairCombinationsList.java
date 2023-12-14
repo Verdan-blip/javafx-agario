@@ -1,7 +1,5 @@
 package ru.kpfu.itis.bagaviev.agario.engine.util;
 
-import ru.kpfu.itis.bagaviev.agario.engine.objects.Agar;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
