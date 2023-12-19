@@ -5,19 +5,20 @@ import ru.kpfu.itis.bagaviev.agario.communication.messages.abstracts.MessageType
 
 public class UpdateDirectionMessage extends Message {
 
-    private final Integer id;
+    private final Integer agarId;
     private final float newDirX;
     private final float newDirY;
 
     private void fillBuffer() {
-        buffer.put((byte) MessageTypes.UPDATE_DIRECTION_MESSAGE);
-        buffer.putInt(id);
+        buffer.put((byte) getMessageType());
+        buffer.putInt(agarId);
         buffer.putFloat(newDirX);
         buffer.putFloat(newDirY);
     }
 
-    public UpdateDirectionMessage(Integer id, float newDirX, float newDirY) {
-        this.id = id;
+    public UpdateDirectionMessage(Integer agarId, float newDirX, float newDirY) {
+        super();
+        this.agarId = agarId;
         this.newDirX = newDirX;
         this.newDirY = newDirY;
         fillBuffer();
@@ -25,11 +26,11 @@ public class UpdateDirectionMessage extends Message {
 
     @Override
     public int getMessageType() {
-        return MessageTypes.UPDATE_DIRECTION_MESSAGE;
+        return MessageTypes.UPDATE_DIRECTION;
     }
 
-    public Integer getId() {
-        return id;
+    public Integer getAgarId() {
+        return agarId;
     }
 
     public float getNewDirX() {

@@ -3,13 +3,12 @@ package ru.kpfu.itis.bagaviev.agario.server.net.listeners;
 import ru.kpfu.itis.bagaviev.agario.communication.messages.abstracts.Message;
 import ru.kpfu.itis.bagaviev.agario.communication.messages.abstracts.MessageTypes;
 import ru.kpfu.itis.bagaviev.agario.communication.messages.client.RegisterMeMessage;
+import ru.kpfu.itis.bagaviev.agario.communication.messages.client.SplitAgarMessage;
 import ru.kpfu.itis.bagaviev.agario.communication.messages.client.UpdateDirectionMessage;
-import ru.kpfu.itis.bagaviev.agario.communication.messages.server.PlayerRegisteredMessage;
-import ru.kpfu.itis.bagaviev.agario.communication.messages.server.UpdateAgarMessage;
-import ru.kpfu.itis.bagaviev.agario.communication.messages.server.UpdateFoodMessage;
+import ru.kpfu.itis.bagaviev.agario.communication.messages.server.OtherRegisteredMessage;
 import ru.kpfu.itis.bagaviev.agario.communication.messages.server.YouRegisteredMessage;
-import ru.kpfu.itis.bagaviev.agario.engine.util.AgarItem;
 import ru.kpfu.itis.bagaviev.agario.engine.world.AgarWorld;
+import ru.kpfu.itis.bagaviev.agario.engine.world.AgarWorldConstants;
 import ru.kpfu.itis.bagaviev.agario.server.net.Server;
 
 public class ClientMessageListener {
@@ -24,41 +23,39 @@ public class ClientMessageListener {
 
     private void handleMessage(Integer sessionId, Message message) {
         switch (message.getMessageType()) {
+
             case MessageTypes.REGISTER_ME -> {
                 RegisterMeMessage registerMeMessage = (RegisterMeMessage) message;
 
-                AgarItem agarItem = agarWorld.createAgar(registerMeMessage.getNickname());
+                Integer agarOwnerId = agarWorld.createAgarOwner(registerMeMessage.getNickname());
+                String nickname = registerMeMessage.getNickname();
 
                 //Returning result to client which wanted to register
-                server.sendMessage(sessionId, new YouRegisteredMessage(
-                        agarItem.getId(),
-                        agarItem.getAgar())
-                );
+                server.sendMessage(sessionId, new YouRegisteredMessage(agarOwnerId, nickname));
+
                 //Notifying all clients that new client joined
-                server.sendBroadcastMessage(sessionId, new PlayerRegisteredMessage(
-                        agarItem.getId(),
-                        agarItem.getNickname(),
-                        agarItem.getAgar())
-                );
+                server.sendBroadcastMessage(sessionId, new OtherRegisteredMessage(agarOwnerId, nickname));
 
-                //Sending to client information about agars
-                agarWorld.forAllAgarItems(otherAgarItem ->
-                    server.sendMessage(sessionId, new UpdateAgarMessage(otherAgarItem.getId(), otherAgarItem.getAgar()))
-                );
-
-                //Sending to client information about feed
-                agarWorld.forAllFeed((id, food) ->
-                    server.sendMessage(sessionId, new UpdateFoodMessage(id, food))
-                );
-
+                //Agar owner needs at least one agar
+                agarWorld.createAgarItem(agarOwnerId);
             }
-            case MessageTypes.UPDATE_DIRECTION_MESSAGE -> {
+
+            case MessageTypes.UPDATE_DIRECTION -> {
                 UpdateDirectionMessage updateDirectionMessage = (UpdateDirectionMessage) message;
-                Integer id = updateDirectionMessage.getId();
+                Integer agarId = updateDirectionMessage.getAgarId();
                 float newDirX = updateDirectionMessage.getNewDirX();
                 float newDirY = updateDirectionMessage.getNewDirY();
-                agarWorld.updateAgarDirection(id, newDirX, newDirY);
+                float velocity = (float) Math.sqrt(newDirX * newDirX + newDirY * newDirY) *
+                        AgarWorldConstants.AGAR_VELOCITY_COEFFICIENT;
+                agarWorld.updateAgar(agarId, newDirX, newDirY, velocity);
             }
+
+            case MessageTypes.SPLIT_AGAR -> {
+                SplitAgarMessage splitAgarMessage = (SplitAgarMessage) message;
+                Integer agarOwnerId = splitAgarMessage.getAgarOwnerId();
+                agarWorld.splitAgars(agarOwnerId);
+            }
+
         }
     }
 

@@ -4,10 +4,12 @@ import javafx.scene.paint.Color;
 import ru.kpfu.itis.bagaviev.agario.communication.messages.abstracts.Message;
 import ru.kpfu.itis.bagaviev.agario.communication.messages.abstracts.MessageTypes;
 import ru.kpfu.itis.bagaviev.agario.communication.messages.client.RegisterMeMessage;
+import ru.kpfu.itis.bagaviev.agario.communication.messages.client.SplitAgarMessage;
 import ru.kpfu.itis.bagaviev.agario.communication.messages.client.UpdateDirectionMessage;
 import ru.kpfu.itis.bagaviev.agario.communication.messages.server.*;
 import ru.kpfu.itis.bagaviev.agario.engine.objects.Agar;
 import ru.kpfu.itis.bagaviev.agario.engine.objects.Food;
+import ru.kpfu.itis.bagaviev.agario.engine.util.AgarItem;
 
 import java.nio.ByteBuffer;
 
@@ -30,34 +32,47 @@ public class Protocol {
                 return new RegisterMeMessage(new String(bytes, 2, length));
             }
 
-            case MessageTypes.UPDATE_DIRECTION_MESSAGE -> {
+            case MessageTypes.UPDATE_DIRECTION -> {
                 return new UpdateDirectionMessage(buffer.getInt(), buffer.getFloat(), buffer.getFloat());
             }
 
-            //Server messages
-            case MessageTypes.PLAYER_REGISTERED -> {
-                Integer id = buffer.getInt();
-                //Getting nickname
-                byte[] nicknameBytes = new byte[buffer.get()];
-                buffer.get(nicknameBytes);
-                String nickname = new String(nicknameBytes);
+            case MessageTypes.SPLIT_AGAR -> {
+                Integer agarOwnerId = buffer.getInt();
+                return new SplitAgarMessage(agarOwnerId);
+            }
 
-                return new PlayerRegisteredMessage(id, nickname, new Agar(
-                        buffer.getFloat(), buffer.getFloat(), buffer.getFloat(),
-                        buffer.getFloat(), buffer.getFloat(), buffer.getFloat()
-                ));
+            //Server messages
+            case MessageTypes.OTHER_REGISTERED -> {
+                Integer agarOwnerId = buffer.getInt();
+                int length = buffer.get();
+                return new OtherRegisteredMessage(agarOwnerId, new String(bytes, 4 + 2, length));
             }
             case MessageTypes.YOU_REGISTERED -> {
-                return new YouRegisteredMessage(buffer.getInt(), new Agar(
-                        buffer.getFloat(), buffer.getFloat(), buffer.getFloat(),
-                        buffer.getFloat(), buffer.getFloat(), buffer.getFloat()
-                ));
+                Integer agarOwnerId = buffer.getInt();
+                int length = buffer.get();
+                return new YouRegisteredMessage(agarOwnerId, new String(bytes, 4 + 2, length));
             }
-            case MessageTypes.UPDATE_AGAR -> {
-                return new UpdateAgarMessage(buffer.getInt(), new Agar(
+            case MessageTypes.YOU_LOST -> {
+                Integer agarOwnerId = buffer.getInt();
+                return new YouLostMessage(agarOwnerId);
+            }
+
+            case MessageTypes.AGAR_CREATED -> {
+                Integer agarOwnerId = buffer.getInt();
+                Integer agarId = buffer.getInt();
+                return new AgarCreatedMessage(new AgarItem(agarOwnerId, agarId, new Agar(
                         buffer.getFloat(), buffer.getFloat(), buffer.getFloat(),
-                        buffer.getFloat(), buffer.getFloat(), buffer.getFloat())
-                );
+                        buffer.getFloat(), buffer.getFloat(), buffer.getFloat(), buffer.getFloat()
+                )));
+            }
+
+            case MessageTypes.UPDATE_AGAR -> {
+                Integer agarOwnerId = buffer.getInt();
+                Integer agarId = buffer.getInt();
+                return new UpdateAgarMessage(new AgarItem(agarOwnerId, agarId, new Agar(
+                        buffer.getFloat(), buffer.getFloat(), buffer.getFloat(),
+                        buffer.getFloat(), buffer.getFloat(), buffer.getFloat(), buffer.getFloat()
+                )));
             }
             case MessageTypes.UPDATE_FOOD -> {
                 return new UpdateFoodMessage(
@@ -68,8 +83,8 @@ public class Protocol {
                         )
                 );
             }
-            case MessageTypes.PLAYER_WAS_EATEN -> {
-                return new PlayerWasEatenMessage(
+            case MessageTypes.AGAR_WAS_EATEN -> {
+                return new AgarWasEatenMessage(
                         buffer.getInt()
                 );
             }

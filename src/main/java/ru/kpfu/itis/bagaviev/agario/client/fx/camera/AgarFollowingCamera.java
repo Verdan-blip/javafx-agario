@@ -1,74 +1,54 @@
 package ru.kpfu.itis.bagaviev.agario.client.fx.camera;
 
 import javafx.scene.Parent;
-import ru.kpfu.itis.bagaviev.agario.engine.objects.Agar;
 
 public class AgarFollowingCamera {
 
-    private static final float ZOOM_FACTOR_TO_AGAR_MASS_RATIO = 25f;
-    private static final float MAX_ZOOM_FACTOR_TO_MIN_ZOOM_FACTOR_RATIO = 5f;
-
     private final Parent background;
 
-    private float zoomFactorX;
-    private float zoomFactorY;
+    private double centerX;
+    private double centerY;
+    private double zoomFactor;
+    private double viewPortWidth;
+    private double viewPortHeight;
 
-    private float minZoomFactorX;
-    private float minZoomFactorY;
-    private float maxZoomFactorX;
-    private float maxZoomFactorY;
 
-    public AgarFollowingCamera(Parent background) {
+    public AgarFollowingCamera(Parent background, double viewPortWidth, double viewPortHeight) {
         this.background = background;
 
-        this.zoomFactorX = 1f;
-        this.zoomFactorY = 1f;
+        this.zoomFactor = 1f;
 
-        this.minZoomFactorX = 1f;
-        this.minZoomFactorY = 1f;
-
-        this.maxZoomFactorX = 1f;
-        this.maxZoomFactorY = 1f;
+        this.viewPortWidth = viewPortWidth;
+        this.viewPortHeight = viewPortHeight;
     }
 
-    public void set(float x, float y) {
-        background.setTranslateX(-x);
-        background.setTranslateY(y);
+    public void setCenter(double x, double y) {
+        this.centerX = x;
+        this.centerY = y;
+
+        double deltaByScaleX = viewPortWidth - viewPortWidth * zoomFactor;
+        double deltaByScaleY = viewPortHeight - viewPortHeight * zoomFactor;
+
+        background.setTranslateX((viewPortWidth / 2 - x) * zoomFactor - deltaByScaleX / 4);
+        background.setTranslateY((viewPortHeight / 2 - y) * zoomFactor - deltaByScaleY / 4);
     }
 
-    public void setZoom(float scaleX, float scaleY) {
-
-        if (scaleX < minZoomFactorX) scaleX = minZoomFactorX;
-        if (scaleY < minZoomFactorY) scaleY = minZoomFactorY;
-
-        if (scaleX > maxZoomFactorX) scaleX = maxZoomFactorX;
-        if (scaleY > maxZoomFactorY) scaleY = maxZoomFactorY;
-
-        this.zoomFactorX = scaleX;
-        this.zoomFactorY = scaleY;
-
-        background.setScaleX(scaleX);
-        background.setScaleY(scaleY);
+    public void setZoom(double zoomFactor) {
+        background.setScaleX(zoomFactor);
+        background.setScaleY(zoomFactor);
+        this.zoomFactor = zoomFactor;
     }
 
-    public void update(Agar agar) {
-
-        minZoomFactorX = 1 / agar.getMass() * ZOOM_FACTOR_TO_AGAR_MASS_RATIO;
-        minZoomFactorY = 1 / agar.getMass() * ZOOM_FACTOR_TO_AGAR_MASS_RATIO;
-
-        maxZoomFactorX = minZoomFactorX * MAX_ZOOM_FACTOR_TO_MIN_ZOOM_FACTOR_RATIO;
-        maxZoomFactorY = minZoomFactorY * MAX_ZOOM_FACTOR_TO_MIN_ZOOM_FACTOR_RATIO;
-
-        background.setTranslateX(-agar.getX() * zoomFactorX);
-        background.setTranslateY(agar.getY() * zoomFactorY);
+    public double getCenterX() {
+        return centerX;
     }
 
-    public float getZoomFactorX() {
-        return zoomFactorX;
+    public double getCenterY() {
+        return centerY;
     }
 
-    public float getZoomFactorY() {
-        return zoomFactorY;
+    public double getZoomFactor() {
+        return zoomFactor;
     }
 
 }

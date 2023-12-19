@@ -20,9 +20,9 @@ public class AgarStorage {
         return -1;
     }
 
-    public Integer add(String nickname, Agar agar) {
+    public Integer add(Integer agarOwnerId, Agar agar) {
         Integer agarItemId = findAvailableIndex();
-        agarItems[agarItemId] = new AgarItem(agarItemId, nickname, agar);
+        agarItems[agarItemId] = new AgarItem(agarOwnerId, agarItemId, agar);
         return agarItemId;
     }
 

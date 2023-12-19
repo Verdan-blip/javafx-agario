@@ -3,7 +3,7 @@ package ru.kpfu.itis.bagaviev.agario.communication.messages.abstracts;
 import java.nio.ByteBuffer;
 
 public abstract class Message {
-    public static final int MESSAGE_SIZE = 36;
+    public static final int MESSAGE_SIZE = 48;
     protected final ByteBuffer buffer;
 
     public Message() {

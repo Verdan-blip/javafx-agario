@@ -28,14 +28,6 @@
                   <Insets bottom="4.0" left="16.0" right="16.0" top="4.0" />
                </padding>
             </Button>
-         <Button fx:id="buttonSkins" alignment="CENTER" mnemonicParsing="false" style="-fx-background-color: rgb(255,176,46, 255); -fx-text-fill: rgb(255, 255, 255, 255);" text="Skins" textAlignment="CENTER">
-            <font>
-               <Font name="System Bold" size="14.0" />
-            </font>
-            <padding>
-               <Insets bottom="4.0" left="16.0" right="16.0" top="4.0" />
-            </padding>
-         </Button>
       </children>
    </HBox>
    <padding>

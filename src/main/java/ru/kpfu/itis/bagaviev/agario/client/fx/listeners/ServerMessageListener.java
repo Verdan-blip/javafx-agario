@@ -18,23 +18,23 @@ public class ServerMessageListener implements MessageListener {
         switch (message.getMessageType()) {
             case MessageTypes.YOU_REGISTERED -> {
                 YouRegisteredMessage youRegisteredMessage = (YouRegisteredMessage) message;
-                gameFrame.startGameWith(
-                        youRegisteredMessage.getId(),
-                        youRegisteredMessage.getAgar()
-                );
-                gameFrame.hideConnectFrame();
+                gameFrame.startGame(youRegisteredMessage.getAgarOwnerId(), youRegisteredMessage.getNickname());
             }
-            case MessageTypes.PLAYER_REGISTERED -> {
-                PlayerRegisteredMessage playerRegisteredMessage = (PlayerRegisteredMessage) message;
-                gameFrame.addAgar(
-                        playerRegisteredMessage.getId(),
-                        playerRegisteredMessage.getNickname(),
-                        playerRegisteredMessage.getAgar()
-                );
+            case MessageTypes.OTHER_REGISTERED -> {
+                OtherRegisteredMessage otherRegisteredMessage = (OtherRegisteredMessage) message;
+                gameFrame.addAgarOwner(otherRegisteredMessage.getAgarOwnerId(), otherRegisteredMessage.getNickname());
+            }
+            case MessageTypes.YOU_LOST -> {
+                YouLostMessage youLostMessage = (YouLostMessage) message;
+                gameFrame.removeAgarOwner(youLostMessage.getAgarOwnerId());
+            }
+            case MessageTypes.AGAR_CREATED -> {
+                AgarCreatedMessage agarCreatedMessage = (AgarCreatedMessage) message;
+                gameFrame.addAgar(agarCreatedMessage.getAgarItem());
             }
             case MessageTypes.UPDATE_AGAR -> {
                 UpdateAgarMessage updateAgarMessage = (UpdateAgarMessage) message;
-                gameFrame.updateAgar(updateAgarMessage.getAgarId(), updateAgarMessage.getAgar());
+                gameFrame.updateAgar(updateAgarMessage.getAgarItem());
             }
             case MessageTypes.UPDATE_FOOD -> {
                 UpdateFoodMessage updateFoodMessage = (UpdateFoodMessage) message;
@@ -43,9 +43,9 @@ public class ServerMessageListener implements MessageListener {
                         updateFoodMessage.getFood()
                 );
             }
-            case MessageTypes.PLAYER_WAS_EATEN -> {
-                PlayerWasEatenMessage playerWasEatenMessage = (PlayerWasEatenMessage) message;
-                gameFrame.removeAgar(playerWasEatenMessage.getAgarId());
+            case MessageTypes.AGAR_WAS_EATEN -> {
+                AgarWasEatenMessage agarWasEatenMessage = (AgarWasEatenMessage) message;
+                gameFrame.removeAgar(agarWasEatenMessage.getAgarId());
             }
         }
     }

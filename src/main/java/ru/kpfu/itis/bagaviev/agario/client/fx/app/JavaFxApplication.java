@@ -12,22 +12,24 @@ import ru.kpfu.itis.bagaviev.agario.server.net.Server;
 public class JavaFxApplication extends Application {
 
     public static final String SCREEN_TITLE = "Agario";
+    public static final float SCREEN_WIDTH = 960;
+    public static final float SCREEN_HEIGHT = 960;
 
     @Override
     public void start(Stage primaryStage) {
         Client client = new Client();
 
         GameFrame gameFrame = new GameFrame(client);
-        gameFrame.showConnectFrame();
 
         client.setServerMessageListener(new ServerMessageListener(gameFrame));
-
         client.connect(Server.ADDRESS, Server.PORT);
 
-        Scene scene = new Scene(gameFrame.getRoot());
+        Scene scene = gameFrame.getScene();
 
         primaryStage.setScene(scene);
         primaryStage.setTitle(SCREEN_TITLE);
+        primaryStage.setWidth(SCREEN_WIDTH);
+        primaryStage.setHeight(SCREEN_HEIGHT);
         primaryStage.show();
         primaryStage.setOnCloseRequest((windowEvent -> client.disconnect()));
     }

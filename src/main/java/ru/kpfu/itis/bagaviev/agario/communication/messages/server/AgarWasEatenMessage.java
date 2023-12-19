@@ -3,7 +3,7 @@ package ru.kpfu.itis.bagaviev.agario.communication.messages.server;
 import ru.kpfu.itis.bagaviev.agario.communication.messages.abstracts.Message;
 import ru.kpfu.itis.bagaviev.agario.communication.messages.abstracts.MessageTypes;
 
-public class PlayerWasEatenMessage extends Message {
+public class AgarWasEatenMessage extends Message {
 
     private final Integer agarId;
 
@@ -12,14 +12,15 @@ public class PlayerWasEatenMessage extends Message {
         buffer.putInt(agarId);
     }
 
-    public PlayerWasEatenMessage(Integer agarId) {
+    public AgarWasEatenMessage(Integer agarId) {
+        super();
         this.agarId = agarId;
         fillBuffer();
     }
 
     @Override
     public int getMessageType() {
-        return MessageTypes.PLAYER_WAS_EATEN;
+        return MessageTypes.AGAR_WAS_EATEN;
     }
 
     public Integer getAgarId() {

@@ -18,12 +18,8 @@ public class AgarItemPair {
         return agarItemB;
     }
 
-    public boolean contains(AgarItem agarItem) {
-        return agarItemA.equals(agarItem) || agarItemB.equals(agarItem);
-    }
-
     public boolean containsId(Integer id) {
-        return agarItemA.getId().equals(id) || agarItemB.getId().equals(id);
+        return agarItemA.getAgarId().equals(id) || agarItemB.getAgarId().equals(id);
     }
 
 }

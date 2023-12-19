@@ -5,7 +5,7 @@ import ru.kpfu.itis.bagaviev.agario.communication.messages.abstracts.MessageType
 import ru.kpfu.itis.bagaviev.agario.engine.objects.Agar;
 import ru.kpfu.itis.bagaviev.agario.engine.util.AgarItem;
 
-public class UpdateAgarMessage extends Message {
+public class AgarCreatedMessage extends Message {
     private final AgarItem agarItem;
 
     private void fillBuffer() {
@@ -20,12 +20,12 @@ public class UpdateAgarMessage extends Message {
         buffer.putFloat(agar.getY());
         buffer.putFloat(agar.getDirX());
         buffer.putFloat(agar.getDirY());
-        buffer.putFloat(agar.getVelocity());
         buffer.putFloat(agar.getMass());
+        buffer.putFloat(agar.getVelocity());
         buffer.putFloat(agar.getMaxVelocity());
     }
 
-    public UpdateAgarMessage(AgarItem agarItem) {
+    public AgarCreatedMessage(AgarItem agarItem) {
         super();
         this.agarItem = agarItem;
         fillBuffer();
@@ -33,11 +33,10 @@ public class UpdateAgarMessage extends Message {
 
     @Override
     public int getMessageType() {
-        return MessageTypes.UPDATE_AGAR;
+        return MessageTypes.AGAR_CREATED;
     }
 
     public AgarItem getAgarItem() {
         return agarItem;
     }
-
 }

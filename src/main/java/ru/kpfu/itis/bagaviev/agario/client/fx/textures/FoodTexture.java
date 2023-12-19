@@ -1,4 +1,4 @@
-package ru.kpfu.itis.bagaviev.agario.client.fx.objects;
+package ru.kpfu.itis.bagaviev.agario.client.fx.textures;
 
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;

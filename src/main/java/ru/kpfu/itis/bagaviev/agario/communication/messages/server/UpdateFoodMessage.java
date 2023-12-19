@@ -22,6 +22,7 @@ public class UpdateFoodMessage extends Message {
     }
 
     public UpdateFoodMessage(Integer foodId, Food food) {
+        super();
         this.food = food;
         this.foodId = foodId;
         fillBuffer();

@@ -6,14 +6,16 @@ public class Agar {
     private float dirX, dirY;
     private float mass;
     private float velocity;
+    private float maxVelocity;
 
-    public Agar(float x, float y, float dirX, float dirY, float velocity, float mass) {
+    public Agar(float x, float y, float dirX, float dirY, float velocity, float mass, float maxVelocity) {
         this.x = x;
         this.y = y;
         this.dirX = dirX;
         this.dirY = dirY;
         this.mass = mass;
         this.velocity = velocity;
+        this.maxVelocity = maxVelocity;
     }
 
     public void move() {
@@ -42,7 +44,16 @@ public class Agar {
     }
 
     public void setVelocity(float velocity) {
+        if (velocity > maxVelocity) velocity = maxVelocity;
         this.velocity = velocity;
+    }
+
+    public float getMaxVelocity() {
+        return maxVelocity;
+    }
+
+    public void setMaxVelocity(float maxVelocity) {
+        this.maxVelocity = maxVelocity;
     }
 
     public void setMass(float mass) {

@@ -1,11 +1,9 @@
 package ru.kpfu.itis.bagaviev.agario.server.net.listeners;
 
-import ru.kpfu.itis.bagaviev.agario.communication.messages.server.PlayerWasEatenMessage;
-import ru.kpfu.itis.bagaviev.agario.communication.messages.server.UpdateAgarMessage;
-import ru.kpfu.itis.bagaviev.agario.communication.messages.server.UpdateFoodMessage;
+import ru.kpfu.itis.bagaviev.agario.communication.messages.server.*;
 import ru.kpfu.itis.bagaviev.agario.engine.listeners.WorldMessagesListener;
-import ru.kpfu.itis.bagaviev.agario.engine.objects.Agar;
 import ru.kpfu.itis.bagaviev.agario.engine.objects.Food;
+import ru.kpfu.itis.bagaviev.agario.engine.util.AgarItem;
 import ru.kpfu.itis.bagaviev.agario.server.net.Server;
 
 public class WorldMessagesListenerImpl implements WorldMessagesListener {
@@ -17,18 +15,28 @@ public class WorldMessagesListenerImpl implements WorldMessagesListener {
     }
 
     @Override
-    public void onAgarUpdate(Integer agarId, Agar agar) {
-        server.sendBroadcastMessage(new UpdateAgarMessage(agarId, agar));
+    public void onAgarCreate(AgarItem agarItem) {
+        server.sendBroadcastMessage(new AgarCreatedMessage(agarItem));
+    }
+
+    @Override
+    public void onAgarUpdate(AgarItem agarItem) {
+        server.sendBroadcastMessage(new UpdateAgarMessage(agarItem));
+    }
+
+    @Override
+    public void onAgarRemove(Integer agarId) {
+        server.sendBroadcastMessage(new AgarWasEatenMessage(agarId));
+    }
+
+    @Override
+    public void onAllAgarsRemoved(Integer agarOwnerId) {
+        server.sendBroadcastMessage(new YouLostMessage(agarOwnerId));
     }
 
     @Override
     public void onFoodUpdate(Integer foodId, Food food) {
         server.sendBroadcastMessage(new UpdateFoodMessage(foodId, food));
-    }
-
-    @Override
-    public void onAgarLost(Integer agarId) {
-        server.sendBroadcastMessage(new PlayerWasEatenMessage(agarId));
     }
 
 }

@@ -1,4 +1,4 @@
-package ru.kpfu.itis.bagaviev.agario.client.fx.objects;
+package ru.kpfu.itis.bagaviev.agario.client.fx.textures;
 
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -29,7 +29,7 @@ public class AgarTexture {
         text.setTranslateY(y + text.getLayoutBounds().getHeight() / 4);
     }
 
-    public void setScale(float newAgarMass) {
+    public void setMass(float newAgarMass) {
         circle.setRadius(newAgarMass * RADIUS_TO_MASS_RATIO);
         text.setFont(Font.font(text.getFont().getFamily(), FontWeight.BOLD, newAgarMass * TEXT_SIZE_TO_MASS_RATIO));
     }
@@ -50,7 +50,7 @@ public class AgarTexture {
         return (float) circle.getCenterY();
     }
 
-    public float getScaleValue() {
+    public float getMass() {
         return (float) circle.getRadius();
     }
 

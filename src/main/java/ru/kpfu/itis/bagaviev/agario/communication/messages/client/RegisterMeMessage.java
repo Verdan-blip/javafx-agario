@@ -9,7 +9,7 @@ public class RegisterMeMessage extends Message {
     private void fillBuffer() {
 
         //Putting header
-        buffer.put((byte) MessageTypes.REGISTER_ME);
+        buffer.put((byte) getMessageType());
 
         //Putting length
         buffer.put((byte) nickname.length());

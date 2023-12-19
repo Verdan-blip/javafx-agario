@@ -34,7 +34,7 @@ public class AgarPairCombinationsList {
         //Removing all saved items
         agarItemPairs.removeAll(agarItemsToRemove);
         //Removing specified item
-        agarItems.removeIf(agarItem -> agarItem.getId().equals(agarId));
+        agarItems.removeIf(agarItem -> agarItem.getAgarId().equals(agarId));
         //Clear buffer
         agarItemsToRemove.clear();
     }

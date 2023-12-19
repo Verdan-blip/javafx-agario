@@ -10,7 +10,12 @@ public class AgarWorldConstants {
 
     //Agar settings
     public static final float AGAR_INITIAL_MASS = 10f;
+    public static final float AGAR_INITIAL_DIRECTION_X = 0f;
+    public static final float AGAR_INITIAL_DIRECTION_Y = 1f;
+    public static final float AGAR_INITIAL_VELOCITY = 0f;
     public static final float AGAR_MASS_INCREASING_RATIO = 1f;
+    public static final float AGAR_MIN_MASS_FOR_SPLITTING = 25f;
+    public static final float AGAR_VELOCITY_COEFFICIENT = 5f;
 
     public static final float WINNING_MASS_RATIO = 1.2f;
     public static final float WINNING_PENETRATION_RATIO = 0.75f;

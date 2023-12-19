@@ -1,147 +1,178 @@
 package ru.kpfu.itis.bagaviev.agario.client.fx.frames;
 
+import javafx.application.Platform;
+import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import ru.kpfu.itis.bagaviev.agario.client.fx.camera.AgarFollowingCamera;
 import ru.kpfu.itis.bagaviev.agario.client.fx.controllers.GameController;
-import ru.kpfu.itis.bagaviev.agario.client.fx.handlers.AgarMouseMoveEventHandler;
-import ru.kpfu.itis.bagaviev.agario.client.fx.handlers.AgarMouseZoomEventHandler;
+import ru.kpfu.itis.bagaviev.agario.client.fx.event_handlers.AgarKeyEventHandler;
+import ru.kpfu.itis.bagaviev.agario.client.fx.event_handlers.AgarMouseMoveEventHandler;
+import ru.kpfu.itis.bagaviev.agario.client.fx.event_handlers.AgarMouseZoomEventHandler;
 import ru.kpfu.itis.bagaviev.agario.client.fx.math.CoordinateSystem;
-import ru.kpfu.itis.bagaviev.agario.client.fx.objects.AgarTexture;
-import ru.kpfu.itis.bagaviev.agario.client.fx.objects.FoodTexture;
-import ru.kpfu.itis.bagaviev.agario.client.fx.objects.Player;
+import ru.kpfu.itis.bagaviev.agario.client.fx.objects.AgarTextureItem;
+import ru.kpfu.itis.bagaviev.agario.client.fx.textures.AgarTexture;
+import ru.kpfu.itis.bagaviev.agario.client.fx.textures.FoodTexture;
 import ru.kpfu.itis.bagaviev.agario.client.net.Client;
 import ru.kpfu.itis.bagaviev.agario.engine.objects.Agar;
 import ru.kpfu.itis.bagaviev.agario.engine.objects.Food;
+import ru.kpfu.itis.bagaviev.agario.engine.util.AgarItem;
 
 import java.nio.file.Paths;
 import java.util.*;
 
+
 public class GameFrame extends Frame<GameController> {
 
     private static final String DEFAULT_NICKNAME = "Noobie";
-
-    private final ConnectFrame connectFrame;
+    private static final float WIDTH = 2048f;
+    private static final float HEIGHT = 2048f;
 
     private final Client client;
 
     //Game Objects
-    private final Map<Integer, AgarTexture> agarTextureMap;
+    private final Map<Integer, AgarTextureItem> agarTextureItemMap;
     private final Map<Integer, FoodTexture> feedTextureMap;
-    private Integer myAgarId;
+
+    private final Map<Integer, String> agarOwnerMap;
+    private Integer myAgarOwnerId;
 
     //Game control
     private AgarMouseMoveEventHandler agarMouseMoveEventHandler;
+    private AgarKeyEventHandler agarKeyEventHandler;
     private AgarMouseZoomEventHandler agarMouseZoomEventHandler;
+
+    //Camera
+    private final AgarFollowingCamera camera;
 
     //Util
     private final CoordinateSystem coordinateSystem;
-    private final BorderPane borderPaneGameField;
-    private final AgarFollowingCamera camera;
+
+    //UI
+    private final Scene scene;
+    private final ConnectFrame connectFrame;
+    private final LeaderboardFrame leaderboardFrame;
+    private final Pane gameFieldPane;
+
+    private void addToGameField(Node node) {
+        gameFieldPane.getChildren().add(node);
+    }
+
+    private void removeFromGameField(Node node) {
+        gameFieldPane.getChildren().remove(node);
+    }
+
+    private void updateAgarTextureItem(AgarItem newAgarItem) {
+
+        Integer agarId = newAgarItem.getAgarId();
+
+        AgarTextureItem agarTextureItem = agarTextureItemMap.get(agarId);
+        AgarTexture agarTexture = agarTextureItem.getAgarTexture();
+
+        Agar newAgar = newAgarItem.getAgar();
+
+        agarTexture.setPosition(
+                coordinateSystem.xToFxCoordinates(newAgar.getX()),
+                coordinateSystem.yToFxCoordinates(newAgar.getY())
+        );
+        agarTexture.setMass(newAgar.getMass());
+    }
+
+    private void updateCamera() {
+        float x = 0f, y = 0f;
+        float sumMass = 0f;
+        float myAgarTextureItemsCount = 0f;
+        for (AgarTextureItem agarTextureItem : agarTextureItemMap.values()) {
+            Integer agarOwnerId = agarTextureItem.getAgarOwnerId();
+            AgarTexture agarTexture = agarTextureItem.getAgarTexture();
+            if (agarOwnerId.equals(myAgarOwnerId)) {
+                x += agarTexture.getPositionX();
+                y += agarTexture.getPositionY();
+                sumMass += agarTexture.getMass();
+                myAgarTextureItemsCount++;
+            }
+        }
+        x /= myAgarTextureItemsCount;
+        y /= myAgarTextureItemsCount;
+        float zoom = 10f / (float) Math.sqrt(sumMass) / (myAgarTextureItemsCount * 0.75f) * 0.125f;
+        camera.setCenter(x, y);
+        //camera.setZoom(zoom);
+    }
 
     public GameFrame(Client client) {
         super(Paths.get("src/main/resources/fxml/game.fxml"));
         this.client = client;
 
-        this.connectFrame = new ConnectFrame(client);
-        this.connectFrame.controller.getTextFieldNickname().setText(DEFAULT_NICKNAME);
-        this.connectFrame.getRoot().setViewOrder(-1);
-
-        this.agarTextureMap = new HashMap<>();
+        this.agarTextureItemMap = new HashMap<>();
         this.feedTextureMap = new HashMap<>();
 
-        this.coordinateSystem = new CoordinateSystem(960, 640);
-        this.borderPaneGameField = controller.getBorderPaneGameField();
+        this.agarOwnerMap = new HashMap<>();
+        this.myAgarOwnerId = -1;
 
-        this.camera = new AgarFollowingCamera(borderPaneGameField);
-    }
+        this.connectFrame = new ConnectFrame(client);
+        this.connectFrame.setNickname(DEFAULT_NICKNAME);
+        this.connectFrame.getRoot().setViewOrder(-1);
 
-    public void startGameWith(Integer agarId, Agar agar) {
+        this.leaderboardFrame = new LeaderboardFrame(agarOwnerMap, agarTextureItemMap);
 
-        addAgar(agarId, connectFrame.getTextFieldNickname().getText(), agar);
+        this.gameFieldPane = controller.getBorderPaneGameField();
+        this.gameFieldPane.setMinSize(WIDTH, HEIGHT);
 
-        //Saving id
-        myAgarId = agarId;
+        this.coordinateSystem = new CoordinateSystem(WIDTH, HEIGHT);
 
-        //Setting mouse events listener
-        agarMouseMoveEventHandler = new AgarMouseMoveEventHandler(client, new Player(agarId, agarTextureMap.get(agarId)));
-        agarMouseZoomEventHandler = new AgarMouseZoomEventHandler(camera);
+        this.camera = new AgarFollowingCamera(gameFieldPane,960, 960);
+        this.camera.setCenter(WIDTH / 2f, HEIGHT / 2f);
 
-        //Adding handlers
-        borderPaneGameField.addEventHandler(MouseEvent.MOUSE_MOVED, agarMouseMoveEventHandler);
-        borderPaneGameField.addEventHandler(ScrollEvent.SCROLL, agarMouseZoomEventHandler);
-
-        camera.setZoom(3f, 3f);
-
-    }
-
-    public void finishGame() {
-        myAgarId = null;
-
-        borderPaneGameField.removeEventHandler(MouseEvent.MOUSE_MOVED, agarMouseMoveEventHandler);
-        borderPaneGameField.removeEventHandler(ScrollEvent.SCROLL, agarMouseZoomEventHandler);
-
-        camera.setZoom(1f, 1f);
-        camera.set(0, 0);
+        this.scene = new Scene(gameFieldPane);
 
         showConnectFrame();
     }
 
-    public void addAgar(Integer agarId, String nickname, Agar agar) {
-        //Creating texture for agar
-        AgarTexture agarTexture = new AgarTexture(nickname, Color.GREEN);
-        agarTexture.setPosition(
-                coordinateSystem.xToFxCoordinates(agar.getX()),
-                coordinateSystem.yToFxCoordinates(agar.getY())
+    public void startGame(Integer agarOwnerId, String nickname) {
+        addAgarOwner(agarOwnerId, nickname);
+        myAgarOwnerId = agarOwnerId;
+
+        //Setting mouse events listener
+        agarMouseMoveEventHandler = new AgarMouseMoveEventHandler(
+                WIDTH, HEIGHT, agarOwnerId, client, agarTextureItemMap
         );
-        agarTexture.setScale(agar.getMass());
+        agarKeyEventHandler = new AgarKeyEventHandler(agarOwnerId, client);
+        agarMouseZoomEventHandler = new AgarMouseZoomEventHandler(camera);
 
-        //Adding texture to map
-        agarTextureMap.put(agarId, agarTexture);
+        //Adding handlers
+        gameFieldPane.addEventHandler(MouseEvent.MOUSE_MOVED, agarMouseMoveEventHandler);
+        gameFieldPane.addEventHandler(ScrollEvent.SCROLL, agarMouseZoomEventHandler);
+        scene.addEventHandler(KeyEvent.KEY_PRESSED, agarKeyEventHandler);
 
-        //Adding texture to frame
-        borderPaneGameField.getChildren().add(agarTexture.getCircle());
-        borderPaneGameField.getChildren().add(agarTexture.getText());
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                Platform.runLater(leaderboardFrame::update);
+            }
+        }, 0, 5_000);
+
+        hideConnectFrame();
+        showLeaderboard();
     }
 
-    public void updateAgar(Integer id, Agar agar) {
-        AgarTexture agarTexture = agarTextureMap.get(id);
-        agarTexture.setPosition(
-              coordinateSystem.xToFxCoordinates(agar.getX()),
-              coordinateSystem.yToFxCoordinates(agar.getY())
-        );
+    public void finishGame() {
 
-        agarTexture.setScale(agar.getMass());
+        gameFieldPane.removeEventHandler(MouseEvent.MOUSE_MOVED, agarMouseMoveEventHandler);
+        gameFieldPane.removeEventHandler(ScrollEvent.SCROLL, agarMouseZoomEventHandler);
+        scene.removeEventHandler(KeyEvent.KEY_PRESSED, agarKeyEventHandler);
 
-        //Updating camera position
-        if (id.equals(myAgarId)) {
-            camera.update(agar);
-        }
+        camera.setZoom(1f);
 
+        showConnectFrame();
     }
 
-    public void removeAgar(Integer agarId) {
-        AgarTexture agarTexture = agarTextureMap.get(agarId);
-
-        borderPaneGameField.getChildren().remove(agarTexture.getCircle());
-        borderPaneGameField.getChildren().remove(agarTexture.getText());
-
-        agarTextureMap.remove(agarId);
-        if (agarId.equals(myAgarId)) {
-            finishGame();
-        }
-    }
-
-    public void updateFood(Integer id, Food food) {
-        FoodTexture foodTexture = feedTextureMap.get(id);
-        if (foodTexture == null) {
-            foodTexture = new FoodTexture(food.getColor());
-            feedTextureMap.put(id, foodTexture);
-            borderPaneGameField.getChildren().add(foodTexture.getCircle());
-        }
+    public void updateFoodTexture(FoodTexture foodTexture, Food food) {
         foodTexture.setPosition(
                 coordinateSystem.xToFxCoordinates(food.getX()),
                 coordinateSystem.yToFxCoordinates(food.getY())
@@ -149,17 +180,88 @@ public class GameFrame extends Frame<GameController> {
         foodTexture.setMass(food.getMass());
     }
 
+    public void addAgarOwner(Integer agarOwnerId, String nickname) {
+        agarOwnerMap.put(agarOwnerId, nickname);
+    }
+
+    public void removeAgarOwner(Integer agarOwnderId) {
+        agarOwnerMap.remove(agarOwnderId);
+        if (agarOwnderId.equals(myAgarOwnerId)) {
+            myAgarOwnerId = -1;
+            finishGame();
+        }
+    }
+
+    public void addAgar(AgarItem agarItem) {
+        Integer agarOwnerId = agarItem.getAgarOwnerId();
+        Integer agarId = agarItem.getAgarId();
+        AgarTexture agarTexture = new AgarTexture(agarOwnerMap.get(agarOwnerId), Color.RED);
+
+        agarTextureItemMap.put(agarId, new AgarTextureItem(agarOwnerId, agarTexture));
+
+        updateAgarTextureItem(agarItem);
+
+        addToGameField(agarTexture.getCircle());
+        addToGameField(agarTexture.getText());
+    }
+
+
+    public void updateAgar(AgarItem agarItem) {
+        updateAgarTextureItem(agarItem);
+        if (myAgarOwnerId.equals(agarItem.getAgarOwnerId())) {
+            updateCamera();
+        }
+    }
+
+    public void removeAgar(Integer agarId) {
+        AgarTextureItem agarTextureItem = agarTextureItemMap.get(agarId);
+        AgarTexture agarTexture = agarTextureItem.getAgarTexture();
+
+        removeFromGameField(agarTexture.getCircle());
+        removeFromGameField(agarTexture.getText());
+
+        agarTextureItemMap.remove(agarId);
+    }
+
+
+    public void updateFood(Integer id, Food food) {
+        FoodTexture foodTexture = feedTextureMap.get(id);
+        if (foodTexture == null) {
+            foodTexture = new FoodTexture(food.getColor());
+            feedTextureMap.put(id, foodTexture);
+            addToGameField(foodTexture.getCircle());
+        }
+        updateFoodTexture(foodTexture, food);
+    }
+
     public void showConnectFrame() {
-        borderPaneGameField.setCenter(connectFrame.getRoot());
+        Parent connectFrameRoot = connectFrame.root;
+        connectFrameRoot.setTranslateX(camera.getCenterX() - ConnectFrame.WIDTH / 2);
+        connectFrameRoot.setTranslateY(camera.getCenterY() - ConnectFrame.HEIGHT / 2);
+        gameFieldPane.getChildren().add(connectFrame.root);
+    }
+
+    public void showLeaderboard() {
+        Parent leaderboardFrameRoot = leaderboardFrame.root;
+        leaderboardFrameRoot.setTranslateX(960 - LeaderboardFrame.WIDTH);
+        leaderboardFrameRoot.setTranslateY(640 - LeaderboardFrame.HEIGHT);
+        gameFieldPane.getChildren().add(leaderboardFrameRoot);
+    }
+
+    public void hideLeaderboard() {
+        gameFieldPane.getChildren().remove(leaderboardFrame.root);
     }
 
     public void hideConnectFrame() {
-        borderPaneGameField.setCenter(null);
+        gameFieldPane.getChildren().remove(connectFrame.root);
+    }
+
+    public Scene getScene() {
+        return scene;
     }
 
     @Override
     public Parent getRoot() {
-        return borderPaneGameField;
+        return gameFieldPane;
     }
-
 }

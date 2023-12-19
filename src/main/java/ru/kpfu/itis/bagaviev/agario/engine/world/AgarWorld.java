@@ -1,14 +1,14 @@
 package ru.kpfu.itis.bagaviev.agario.engine.world;
 
 import ru.kpfu.itis.bagaviev.agario.engine.listeners.WorldMessagesListener;
-import ru.kpfu.itis.bagaviev.agario.engine.managers.AgarManager;
+import ru.kpfu.itis.bagaviev.agario.engine.managers.AgarFeedManager;
+import ru.kpfu.itis.bagaviev.agario.engine.managers.AgarFightsManager;
+import ru.kpfu.itis.bagaviev.agario.engine.managers.AgarWorldManager;
 import ru.kpfu.itis.bagaviev.agario.engine.managers.FoodManager;
 import ru.kpfu.itis.bagaviev.agario.engine.objects.Agar;
+import ru.kpfu.itis.bagaviev.agario.engine.objects.AgarOwner;
 import ru.kpfu.itis.bagaviev.agario.engine.objects.Food;
-import ru.kpfu.itis.bagaviev.agario.engine.util.AgarFightConclusion;
-import ru.kpfu.itis.bagaviev.agario.engine.util.AgarItem;
-import ru.kpfu.itis.bagaviev.agario.engine.util.AgarPairCombinationsList;
-import ru.kpfu.itis.bagaviev.agario.engine.util.AgarStorage;
+import ru.kpfu.itis.bagaviev.agario.engine.util.*;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -16,7 +16,11 @@ import java.util.function.Consumer;
 
 public class AgarWorld {
 
+    //For indexing agars id
     private final AgarStorage agarStorage;
+
+    //For indexing agar owners
+    private final AgarOwnerStorage agarOwnerStorage;
     private final Map<Integer, Food> feedMap;
 
     //Listeners
@@ -26,14 +30,17 @@ public class AgarWorld {
     private final FoodManager foodManager;
     private final AgarPairCombinationsList agarPairCombinationsList;
     private final List<AgarItem> agarItemsToRemove;
-    private final AgarFightConclusion agarFightConclusion;
+    private final List<AgarItem> agarItemsToAdd;
 
-    private void stepFeed(Agar agar) {
+    //Split
+
+    private void stepFeed(AgarItem agarItem) {
+        Agar agar = agarItem.getAgar();
         for (var foodPair : feedMap.entrySet()) {
             Integer foodId = foodPair.getKey();
             Food food = foodPair.getValue();
-            if (AgarManager.canEat(agar, food)) {
-                AgarManager.eat(agar, food);
+            if (AgarFeedManager.canEat(agar, food)) {
+                AgarFeedManager.eat(agar, food);
                 foodManager.respawnFood(food);
                 worldMessagesListener.onFoodUpdate(foodId, food);
             }
@@ -43,28 +50,23 @@ public class AgarWorld {
     private void stepAgars() {
         //Updating agars positions and checking all feed for eating by agars
         agarStorage.forEachItems(agarItem -> {
-            agarItem.getAgar().move();
-            AgarManager.handleAgarBeyondWorld(agarItem.getAgar());
-            worldMessagesListener.onAgarUpdate(agarItem.getId(), agarItem.getAgar());
-            stepFeed(agarItem.getAgar());
+            AgarWorldManager.updateAgarPosition(agarItem);
+            AgarWorldManager.handleAgarBeyondWorld(agarItem);
+            stepFeed(agarItem);
         });
         handleAgarsFights();
+        //Notify that agars were updated
+        agarStorage.forEachItems(worldMessagesListener::onAgarUpdate);
     }
 
     private void handleAgarsFights() {
-        agarPairCombinationsList.forEach(agarItemPair -> {
-            AgarManager.putFightConclusion(
-                    agarFightConclusion,
-                    agarItemPair.getAgarItemA(),
-                    agarItemPair.getAgarItemB()
-            );
-            if (!agarFightConclusion.isDraw()) {
-                agarItemsToRemove.add(agarFightConclusion.getLoser());
-                worldMessagesListener.onAgarLost(agarFightConclusion.getLoser().getId());
-            }
-        });
+        agarPairCombinationsList.forEach(agarItemPair ->
+            AgarFightsManager.handleAgarsFight(
+                    this, agarItemPair.getAgarItemA(), agarItemPair.getAgarItemB()
+            )
+        );
         //Removing all lost agars
-        agarItemsToRemove.forEach((agarItem -> removeAgar(agarItem.getId())));
+        agarItemsToRemove.forEach((agarItem -> removeAgar(agarItem.getAgarOwnerId(), agarItem.getAgarId())));
         agarItemsToRemove.clear();
     }
 
@@ -72,13 +74,14 @@ public class AgarWorld {
 
         //Game maps
         agarStorage = new AgarStorage();
+        agarOwnerStorage = new AgarOwnerStorage();
         feedMap = new HashMap<>();
 
         //Util
         foodManager = new FoodManager(AgarWorldConstants.WORLD_WIDTH, AgarWorldConstants.WORLD_HEIGHT);
         agarPairCombinationsList = new AgarPairCombinationsList();
         agarItemsToRemove = new LinkedList<>();
-        agarFightConclusion = new AgarFightConclusion();
+        agarItemsToAdd = new LinkedList<>();
 
         //Initializing feed
         for (int i = 0; i < AgarWorldConstants.FEED_SPAWN_COUNT; i++) {
@@ -86,31 +89,69 @@ public class AgarWorld {
         }
     }
 
-    public Integer addAgar(String nickname, Agar agar) {
-        Integer agarId = agarStorage.add(nickname, agar);
-        agarPairCombinationsList.add(new AgarItem(agarId, nickname, agar));
-        return agarId;
+    public Integer createAgarOwner(String nickname) {
+        return agarOwnerStorage.createAgarOwner(nickname);
     }
 
-    public AgarItem createAgar(String nickname) {
-        float mass = AgarWorldConstants.AGAR_INITIAL_MASS;
-        Agar agar = new Agar(
-                0, 0, 1, 0,
-                (float) (mass / Math.pow(mass, 1.44) * 10),
-                AgarWorldConstants.AGAR_INITIAL_MASS
-        );
-        Integer agarId = addAgar(nickname, agar);
-        return new AgarItem(agarId, nickname, agar);
+    public AgarItem createAgarItem(Integer agarOwnerId) {
+
+        Agar agar = AgarWorldManager.createAgar(0f, 0f);
+        Integer agarId = agarStorage.add(agarOwnerId, agar);
+        AgarItem agarItem = new AgarItem(agarOwnerId, agarId, agar);
+
+        AgarOwner agarOwner = agarOwnerStorage.get(agarOwnerId);
+        agarOwner.addAgarItem(agarItem);
+
+        agarPairCombinationsList.add(agarItem);
+
+        //Notify listener
+        worldMessagesListener.onAgarCreate(agarItem);
+
+        return agarItem;
     }
 
-    public void removeAgar(Integer agarId) {
+    public void removeAgar(Integer agarOwnerId, Integer agarId) {
+
+        AgarOwner agarOwner = agarOwnerStorage.get(agarOwnerId);
+
+        agarOwner.remove(agarId);
         agarStorage.remove(agarId);
         agarPairCombinationsList.remove(agarId);
+
+        worldMessagesListener.onAgarRemove(agarId);
+
+        if (agarOwner.hasNoAgars()) {
+            worldMessagesListener.onAllAgarsRemoved(agarOwnerId);
+        }
+
     }
 
-    public void updateAgarDirection(Integer agarId, float newDirX, float newDirY) {
-        AgarItem agar = agarStorage.get(agarId);
-        if (agar != null) agarStorage.get(agarId).getAgar().setDirection(newDirX, newDirY);
+    public void splitAgars(Integer agarOwnerId) {
+        AgarOwner agarOwner = agarOwnerStorage.get(agarOwnerId);
+        agarOwner.forEachAgarItem(agarItem -> {
+            AgarWorldManager.handleAgarSplitting(this, agarItem);
+        });
+        agarItemsToAdd.forEach(agarOwner::addAgarItem);
+        agarItemsToAdd.clear();
+    }
+
+    public void updateAgar(Integer agarId, float newDirX, float newDirY, float velocity) {
+        AgarItem agarItem = agarStorage.get(agarId);
+        if (agarItem != null) {
+            Agar agar = agarItem.getAgar();
+            agar.setDirection(newDirX, newDirY);
+            agar.setVelocity(velocity);
+            //Notify listener
+            worldMessagesListener.onAgarUpdate(agarItem);
+        }
+    }
+
+    public void removeLater(Integer agarId) {
+        agarItemsToRemove.add(agarStorage.get(agarId));
+    }
+
+    public void addLater(AgarItem agarItem) {
+        agarItemsToAdd.add(agarItem);
     }
 
     public void step() {
@@ -122,12 +163,16 @@ public class AgarWorld {
         this.worldMessagesListener = worldMessagesListener;
     }
 
-    public void forAllAgarItems(Consumer<AgarItem> consumer) {
+    public void forEachAgarItem(Consumer<AgarItem> consumer) {
         agarStorage.forEachItems(consumer);
     }
 
-    public void forAllFeed(BiConsumer<Integer, Food> biConsumer) {
+    public void forEachFood(BiConsumer<Integer, Food> biConsumer) {
         feedMap.forEach(biConsumer);
+    }
+
+    public void forEachAgarOwner(BiConsumer<Integer, AgarOwner> biConsumer) {
+        agarOwnerStorage.forEachAgarOwner(biConsumer);
     }
 
 }
