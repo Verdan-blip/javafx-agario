@@ -8,8 +8,8 @@ import java.util.*;
 
 public class LeaderboardFrame extends Frame<LeaderboardController> {
 
-    public static final float WIDTH = 96f;
-    public static final float HEIGHT = 128f;
+    public static final float WIDTH = 128f;
+    public static final float HEIGHT = 196f;
 
     private final Map<Integer, String> agarOwnerIdNicknameMap;
     private final Map<Integer, AgarTextureItem> agarTextureItemMap;

@@ -50,6 +50,7 @@ public class Server {
                 //Generating id for new actor
                 Integer sessionId = counter;
                 ClientHandlingThread clientHandlingThread = new ClientHandlingThread(sessionId, clientSocket, clientMessageListener);
+                clientHandlingThread.setOnDisconnect(session::remove);
 
                 //Saving actor
                 session.put(sessionId, clientHandlingThread);

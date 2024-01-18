@@ -16,7 +16,7 @@ public class ConnectFrame extends Frame<ConnectController> {
     public static final float HEIGHT = 128f;
 
     public ConnectFrame(Client client) {
-        super(Paths.get("src/main/resources/fxml/connect.fxml"));
+        super(Paths.get("src/main/resources/fxml/connect.fxml").toAbsolutePath());
 
         VBox vBox = controller.getVBoxConnect();
         vBox.setPrefWidth(WIDTH);

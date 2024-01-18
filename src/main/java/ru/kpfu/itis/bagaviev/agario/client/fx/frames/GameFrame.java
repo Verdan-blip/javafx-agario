@@ -2,18 +2,17 @@ package ru.kpfu.itis.bagaviev.agario.client.fx.frames;
 
 import javafx.application.Platform;
 import javafx.scene.Node;
+import javafx.scene.ParallelCamera;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import ru.kpfu.itis.bagaviev.agario.client.fx.camera.AgarFollowingCamera;
+import ru.kpfu.itis.bagaviev.agario.client.fx.camera.GameCamera;
 import ru.kpfu.itis.bagaviev.agario.client.fx.controllers.GameController;
 import ru.kpfu.itis.bagaviev.agario.client.fx.event_handlers.AgarKeyEventHandler;
 import ru.kpfu.itis.bagaviev.agario.client.fx.event_handlers.AgarMouseMoveEventHandler;
-import ru.kpfu.itis.bagaviev.agario.client.fx.event_handlers.AgarMouseZoomEventHandler;
 import ru.kpfu.itis.bagaviev.agario.client.fx.math.CoordinateSystem;
 import ru.kpfu.itis.bagaviev.agario.client.fx.objects.AgarTextureItem;
 import ru.kpfu.itis.bagaviev.agario.client.fx.textures.AgarTexture;
@@ -30,8 +29,10 @@ import java.util.*;
 public class GameFrame extends Frame<GameController> {
 
     private static final String DEFAULT_NICKNAME = "Noobie";
-    private static final float WIDTH = 2048f;
-    private static final float HEIGHT = 2048f;
+    private static final float SCREEN_WIDTH = 960;
+    private static final float SCREEN_HEIGHT = 960;
+    private static final float MAP_WIDTH = 2048f;
+    private static final float MAP_HEIGHT = 2048f;
 
     private final Client client;
 
@@ -45,10 +46,9 @@ public class GameFrame extends Frame<GameController> {
     //Game control
     private AgarMouseMoveEventHandler agarMouseMoveEventHandler;
     private AgarKeyEventHandler agarKeyEventHandler;
-    private AgarMouseZoomEventHandler agarMouseZoomEventHandler;
 
     //Camera
-    private final AgarFollowingCamera camera;
+    private final GameCamera camera;
 
     //Util
     private final CoordinateSystem coordinateSystem;
@@ -58,6 +58,7 @@ public class GameFrame extends Frame<GameController> {
     private final ConnectFrame connectFrame;
     private final LeaderboardFrame leaderboardFrame;
     private final Pane gameFieldPane;
+    private final Pane uiPane;
 
     private void addToGameField(Node node) {
         gameFieldPane.getChildren().add(node);
@@ -99,9 +100,9 @@ public class GameFrame extends Frame<GameController> {
         }
         x /= myAgarTextureItemsCount;
         y /= myAgarTextureItemsCount;
-        float zoom = 10f / (float) Math.sqrt(sumMass) / (myAgarTextureItemsCount * 0.75f) * 0.125f;
+        float zoom = 10f / (float) Math.sqrt(sumMass) / (Math.min(myAgarTextureItemsCount, 2) * 0.25f) * 0.5f;
         camera.setCenter(x, y);
-        //camera.setZoom(zoom);
+        camera.setZoom(zoom);
     }
 
     public GameFrame(Client client) {
@@ -121,14 +122,16 @@ public class GameFrame extends Frame<GameController> {
         this.leaderboardFrame = new LeaderboardFrame(agarOwnerMap, agarTextureItemMap);
 
         this.gameFieldPane = controller.getBorderPaneGameField();
-        this.gameFieldPane.setMinSize(WIDTH, HEIGHT);
+        this.gameFieldPane.setPrefSize(MAP_WIDTH, MAP_HEIGHT);
 
-        this.coordinateSystem = new CoordinateSystem(WIDTH, HEIGHT);
+        this.uiPane = controller.getAnchorPaneUi();
 
-        this.camera = new AgarFollowingCamera(gameFieldPane,960, 960);
-        this.camera.setCenter(WIDTH / 2f, HEIGHT / 2f);
+        this.coordinateSystem = new CoordinateSystem(MAP_WIDTH, MAP_HEIGHT);
 
-        this.scene = new Scene(gameFieldPane);
+        this.camera = new GameCamera(gameFieldPane, SCREEN_WIDTH, SCREEN_HEIGHT);
+        this.camera.setCenter(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+
+        this.scene = new Scene(uiPane);
 
         showConnectFrame();
     }
@@ -139,14 +142,12 @@ public class GameFrame extends Frame<GameController> {
 
         //Setting mouse events listener
         agarMouseMoveEventHandler = new AgarMouseMoveEventHandler(
-                WIDTH, HEIGHT, agarOwnerId, client, agarTextureItemMap
+                MAP_WIDTH, MAP_HEIGHT, agarOwnerId, client, agarTextureItemMap
         );
         agarKeyEventHandler = new AgarKeyEventHandler(agarOwnerId, client);
-        agarMouseZoomEventHandler = new AgarMouseZoomEventHandler(camera);
 
         //Adding handlers
         gameFieldPane.addEventHandler(MouseEvent.MOUSE_MOVED, agarMouseMoveEventHandler);
-        gameFieldPane.addEventHandler(ScrollEvent.SCROLL, agarMouseZoomEventHandler);
         scene.addEventHandler(KeyEvent.KEY_PRESSED, agarKeyEventHandler);
 
         Timer timer = new Timer();
@@ -162,14 +163,11 @@ public class GameFrame extends Frame<GameController> {
     }
 
     public void finishGame() {
-
         gameFieldPane.removeEventHandler(MouseEvent.MOUSE_MOVED, agarMouseMoveEventHandler);
-        gameFieldPane.removeEventHandler(ScrollEvent.SCROLL, agarMouseZoomEventHandler);
         scene.removeEventHandler(KeyEvent.KEY_PRESSED, agarKeyEventHandler);
-
-        camera.setZoom(1f);
-
+        //camera.setZoom(1);
         showConnectFrame();
+        hideLeaderboard();
     }
 
     public void updateFoodTexture(FoodTexture foodTexture, Food food) {
@@ -184,9 +182,9 @@ public class GameFrame extends Frame<GameController> {
         agarOwnerMap.put(agarOwnerId, nickname);
     }
 
-    public void removeAgarOwner(Integer agarOwnderId) {
-        agarOwnerMap.remove(agarOwnderId);
-        if (agarOwnderId.equals(myAgarOwnerId)) {
+    public void removeAgarOwner(Integer agarOwnerId) {
+        agarOwnerMap.remove(agarOwnerId);
+        if (agarOwnerId.equals(myAgarOwnerId)) {
             myAgarOwnerId = -1;
             finishGame();
         }
@@ -236,24 +234,24 @@ public class GameFrame extends Frame<GameController> {
 
     public void showConnectFrame() {
         Parent connectFrameRoot = connectFrame.root;
-        connectFrameRoot.setTranslateX(camera.getCenterX() - ConnectFrame.WIDTH / 2);
-        connectFrameRoot.setTranslateY(camera.getCenterY() - ConnectFrame.HEIGHT / 2);
-        gameFieldPane.getChildren().add(connectFrame.root);
+        connectFrameRoot.setTranslateX(SCREEN_WIDTH / 2 - ConnectFrame.WIDTH / 2);
+        connectFrameRoot.setTranslateY(SCREEN_HEIGHT / 2 - ConnectFrame.HEIGHT / 2);
+        uiPane.getChildren().add(connectFrame.root);
     }
 
     public void showLeaderboard() {
         Parent leaderboardFrameRoot = leaderboardFrame.root;
-        leaderboardFrameRoot.setTranslateX(960 - LeaderboardFrame.WIDTH);
-        leaderboardFrameRoot.setTranslateY(640 - LeaderboardFrame.HEIGHT);
-        gameFieldPane.getChildren().add(leaderboardFrameRoot);
+        leaderboardFrameRoot.setTranslateX(SCREEN_WIDTH - LeaderboardFrame.WIDTH);
+        leaderboardFrameRoot.setTranslateY(0);
+        uiPane.getChildren().add(leaderboardFrame.root);
     }
 
     public void hideLeaderboard() {
-        gameFieldPane.getChildren().remove(leaderboardFrame.root);
+        uiPane.getChildren().remove(leaderboardFrame.root);
     }
 
     public void hideConnectFrame() {
-        gameFieldPane.getChildren().remove(connectFrame.root);
+        uiPane.getChildren().remove(connectFrame.root);
     }
 
     public Scene getScene() {

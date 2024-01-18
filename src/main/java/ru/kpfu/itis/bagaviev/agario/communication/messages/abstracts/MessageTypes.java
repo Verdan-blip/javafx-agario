@@ -3,7 +3,7 @@ package ru.kpfu.itis.bagaviev.agario.communication.messages.abstracts;
 public class MessageTypes {
 
     //Messages from Client
-    public static final int REGISTER_ME = 0;
+    public static final int REGISTER_ME = 10;
     public static final int UPDATE_DIRECTION = 3;
 
     //Messages from server

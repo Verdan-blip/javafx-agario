@@ -2,38 +2,38 @@ package ru.kpfu.itis.bagaviev.agario.client.fx.camera;
 
 import javafx.scene.Parent;
 
-public class AgarFollowingCamera {
+public class GameCamera {
 
     private final Parent background;
+    private final double width;
+    private final double height;
 
     private double centerX;
     private double centerY;
     private double zoomFactor;
-    private double viewPortWidth;
-    private double viewPortHeight;
 
+    private double backgroundOffsetX;
+    private double backgroundOffsetY;
 
-    public AgarFollowingCamera(Parent background, double viewPortWidth, double viewPortHeight) {
+    public GameCamera(Parent background, double width, double height) {
         this.background = background;
-
         this.zoomFactor = 1f;
-
-        this.viewPortWidth = viewPortWidth;
-        this.viewPortHeight = viewPortHeight;
+        this.width = width;
+        this.height = height;
     }
 
     public void setCenter(double x, double y) {
-        this.centerX = x;
-        this.centerY = y;
-
-        double deltaByScaleX = viewPortWidth - viewPortWidth * zoomFactor;
-        double deltaByScaleY = viewPortHeight - viewPortHeight * zoomFactor;
-
-        background.setTranslateX((viewPortWidth / 2 - x) * zoomFactor - deltaByScaleX / 4);
-        background.setTranslateY((viewPortHeight / 2 - y) * zoomFactor - deltaByScaleY / 4);
+        background.setTranslateX((width / 2 - x) * zoomFactor + backgroundOffsetX / 2);
+        background.setTranslateY((height / 2 - y) * zoomFactor + backgroundOffsetY / 2);
+        centerX = x;
+        centerY = y;
     }
 
     public void setZoom(double zoomFactor) {
+
+        backgroundOffsetX = (width * zoomFactor - width) + 128 * zoomFactor;
+        backgroundOffsetY = (height * zoomFactor - height) + 128 * zoomFactor;
+
         background.setScaleX(zoomFactor);
         background.setScaleY(zoomFactor);
         this.zoomFactor = zoomFactor;

@@ -8,6 +8,9 @@ import ru.kpfu.itis.bagaviev.agario.client.fx.listeners.ServerMessageListener;
 import ru.kpfu.itis.bagaviev.agario.client.net.Client;
 import ru.kpfu.itis.bagaviev.agario.server.net.Server;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 
 public class JavaFxApplication extends Application {
 
@@ -16,13 +19,13 @@ public class JavaFxApplication extends Application {
     public static final float SCREEN_HEIGHT = 960;
 
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage primaryStage) throws UnknownHostException {
         Client client = new Client();
 
         GameFrame gameFrame = new GameFrame(client);
 
         client.setServerMessageListener(new ServerMessageListener(gameFrame));
-        client.connect(Server.ADDRESS, Server.PORT);
+        client.connect(InetAddress.getByName("localhost"), Server.PORT);
 
         Scene scene = gameFrame.getScene();
 
@@ -32,10 +35,6 @@ public class JavaFxApplication extends Application {
         primaryStage.setHeight(SCREEN_HEIGHT);
         primaryStage.show();
         primaryStage.setOnCloseRequest((windowEvent -> client.disconnect()));
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 
 }

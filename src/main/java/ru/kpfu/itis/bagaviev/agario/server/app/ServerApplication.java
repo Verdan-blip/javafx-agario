@@ -13,7 +13,7 @@ import java.util.TimerTask;
 
 public class ServerApplication {
 
-    private static final int FPS = 60;
+    private static final int FPS = 144;
 
     public static void main(String[] args) {
 
@@ -25,9 +25,9 @@ public class ServerApplication {
         server.setOnConnectListener(sessionId -> {
             agarWorld.forEachAgarOwner((agarOwnerId, agarOwner) -> {
                 server.sendMessage(sessionId, new OtherRegisteredMessage(agarOwnerId, agarOwner.getNickname()));
-                agarOwner.forEachAgarItem(agarItem -> {
-                    server.sendMessage(sessionId, new AgarCreatedMessage(agarItem));
-                });
+                agarOwner.forEachAgarItem(agarItem ->
+                    server.sendMessage(sessionId, new AgarCreatedMessage(agarItem))
+                );
             });
             agarWorld.forEachFood((id, food) ->
                     server.sendMessage(sessionId, new UpdateFoodMessage(id, food))

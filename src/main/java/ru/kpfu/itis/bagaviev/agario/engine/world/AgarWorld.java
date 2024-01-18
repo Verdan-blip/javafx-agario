@@ -32,8 +32,6 @@ public class AgarWorld {
     private final List<AgarItem> agarItemsToRemove;
     private final List<AgarItem> agarItemsToAdd;
 
-    //Split
-
     private void stepFeed(AgarItem agarItem) {
         Agar agar = agarItem.getAgar();
         for (var foodPair : feedMap.entrySet()) {
@@ -121,6 +119,7 @@ public class AgarWorld {
         worldMessagesListener.onAgarRemove(agarId);
 
         if (agarOwner.hasNoAgars()) {
+            agarOwnerStorage.remove(agarOwnerId);
             worldMessagesListener.onAllAgarsRemoved(agarOwnerId);
         }
 
@@ -128,9 +127,9 @@ public class AgarWorld {
 
     public void splitAgars(Integer agarOwnerId) {
         AgarOwner agarOwner = agarOwnerStorage.get(agarOwnerId);
-        agarOwner.forEachAgarItem(agarItem -> {
-            AgarWorldManager.handleAgarSplitting(this, agarItem);
-        });
+        agarOwner.forEachAgarItem(agarItem ->
+            AgarWorldManager.handleAgarSplitting(this, agarItem)
+        );
         agarItemsToAdd.forEach(agarOwner::addAgarItem);
         agarItemsToAdd.clear();
     }

@@ -7,6 +7,7 @@ import ru.kpfu.itis.bagaviev.agario.server.net.listeners.ClientMessageListener;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.function.Consumer;
 
 public class ClientHandlingThread extends Thread {
 
@@ -16,6 +17,9 @@ public class ClientHandlingThread extends Thread {
 
     private final MessageInputStream in;
     private final MessageOutputStream out;
+
+    //Listeners
+    private Consumer<Integer> onDisconnect;
 
     public ClientHandlingThread(Integer sessionId, Socket clientSocket, ClientMessageListener clientMessageListener) {
         this.sessionId = sessionId;
@@ -33,19 +37,34 @@ public class ClientHandlingThread extends Thread {
         try {
             out.writeMessage(message);
             out.flush();
-        } catch (IOException ignored) { }
+        } catch (IOException exception) {
+            onDisconnect.accept(sessionId);
+            try {
+                clientSocket.close();
+            } catch (IOException exception2) {
+                throw new RuntimeException(exception2);
+            }
+        }
     }
 
     @Override
     public void run() {
         try {
             while (!clientSocket.isClosed()) {
-                clientMessageListener.onMessagePerformed(sessionId, in.readMessage());
+                Message message = in.readMessage();
+                if (message != null) {
+                    clientMessageListener.onMessagePerformed(sessionId, message);
+                }
             }
+            onDisconnect.accept(sessionId);
             clientSocket.close();
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }
+    }
+
+    public void setOnDisconnect(Consumer<Integer> onDisconnect) {
+        this.onDisconnect = onDisconnect;
     }
 
 }

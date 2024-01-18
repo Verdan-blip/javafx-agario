@@ -2,5 +2,8 @@
 
 <?import javafx.scene.layout.*?>
 
-
-<AnchorPane id="anchor" fx:id="anchorPaneGameField" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="2048.0" minWidth="2048.0" prefHeight="2048.0" prefWidth="2048.0" stylesheets="@../css/background_style.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.kpfu.itis.bagaviev.agario.client.fx.controllers.GameController" />
+<AnchorPane fx:id="anchorPaneUi" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.kpfu.itis.bagaviev.agario.client.fx.controllers.GameController">
+   <children>
+      <AnchorPane id="anchor" fx:id="anchorPaneGameField" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="2048.0" minWidth="2048.0" prefHeight="2048.0" prefWidth="2048.0" stylesheets="@../css/background_style.css" />
+   </children>
+</AnchorPane>

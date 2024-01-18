@@ -10,8 +10,15 @@ public class GameController {
     @FXML
     private AnchorPane anchorPaneGameField;
 
+    @FXML
+    private AnchorPane anchorPaneUi;
+
     public Pane getBorderPaneGameField() {
         return anchorPaneGameField;
+    }
+
+    public Pane getAnchorPaneUi() {
+        return anchorPaneUi;
     }
 
 }
